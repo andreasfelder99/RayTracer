@@ -9,13 +9,15 @@ import java.awt.image.BufferedImage;
 
 public class simpleRayTracer extends JPanel {
     private int width = 800;
-    private int height = 600;
+    private int height = 800;
     private BufferedImage image;
 
     private Vector3[] eyeRay;
     private Vector3 hitPoint;
 
     private Scene scene;
+
+    private final float epsilon = 1e-4f;
 
     public simpleRayTracer(Vector3 eye, Vector3 lookAt, float FOV){
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -30,7 +32,8 @@ public class simpleRayTracer extends JPanel {
                 new Sphere(new Vector3(0, -1001, 0), 1000, Color.GRAY),
                 new Sphere(new Vector3(0, 1001, 0), 1000, Color.WHITE),
                 new Sphere(new Vector3(-0.6, -0.7, 0.6), 0.3F, Color.YELLOW),
-                new Sphere(new Vector3(0.3, -0.4, 0.3), 0.6F, Color.CYAN)
+                new Sphere(new Vector3(0.3, -0.4, 0.3), 0.6F, Color.CYAN),
+                new Sphere(new Vector3(0.8, 0.4, 1), 0.2F, Color.green)
 
         });
 
@@ -54,6 +57,7 @@ public class simpleRayTracer extends JPanel {
         r = Vector3.normalize(r);
 
         Vector3 u = Vector3.cross(r, f);
+        u = Vector3.normalize(u);
 
         // Normalize pixel coordinates to range [-1, 1]
         float px = (2 * (pixel.x() + 0.5f) / width - 1) * (float) Math.tan(fov / 2) * width / height;
@@ -67,11 +71,11 @@ public class simpleRayTracer extends JPanel {
         return eyeRay;
     }
 
-    private Vector3 findClosestHitpoint(Scene scene, Vector3[] eyeRay){
+    private Vector3 findClosestHitpoint(Scene scene, Vector3[] eyeRay) {
         Vector3 hitPoint = new Vector3(0, 0, 0);
         float minDistance = Float.POSITIVE_INFINITY;
 
-        for (Sphere sphere : scene.getSpheres()){
+        for (Sphere sphere : scene.getSpheres()) {
             Vector3 center = sphere.getCenter();
             float radius = sphere.getRadius();
 
@@ -86,28 +90,27 @@ public class simpleRayTracer extends JPanel {
 
             float discriminant = b * b - 4 * a * c;
 
-            if (discriminant >= 0){
+            if (discriminant >= 0) {
                 float t1 = (-b + (float) Math.sqrt(discriminant)) / (2 * a);
                 float t2 = (-b - (float) Math.sqrt(discriminant)) / (2 * a);
 
-                if (t1 > 0 && t1 < minDistance){
+                if (t1 > epsilon && t1 < minDistance) {
                     minDistance = t1;
                     hitPoint = o.add(c_1.multiply(t1));
                 }
 
-                if (t2 > 0 && t2 < minDistance){
+                if (t2 > epsilon && t2 < minDistance) {
                     minDistance = t2;
                     hitPoint = o.add(c_1.multiply(t2));
                 }
             }
         }
-
         return hitPoint;
     }
 
     private Color computeColor(Scene scene, Vector3 hitPoint) {
         for (Sphere sphere : scene.getSpheres()) {
-            if (hitPoint != null && hitPoint.subtract(sphere.getCenter()).length() <= sphere.getRadius()) {
+            if (hitPoint != null && hitPoint.subtract(sphere.getCenter()).length() <= sphere.getRadius() + epsilon) {
                 return sphere.getColor();
             }
         }
