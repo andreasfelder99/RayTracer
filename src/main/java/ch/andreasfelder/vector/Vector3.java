@@ -130,4 +130,12 @@ public record Vector3(float x, float y, float z) {
                 (normal.x * matrix.m13()) + (normal.y * matrix.m23()) + (normal.z * matrix.m33())
         );
     }
+
+    //Own functions
+    public Vector3 pow(float pow) {
+        return new Vector3(
+                Math.pow(x, pow),
+                Math.pow(y, pow),
+                Math.pow(z, pow));
+    }
 }

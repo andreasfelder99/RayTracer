@@ -2,15 +2,13 @@ package ch.andreasfelder.week2;
 
 import ch.andreasfelder.vector.Vector3;
 
-import java.awt.*;
-
 public class Sphere {
     private final Vector3 center;
     private final float radius;
-    private final Color color;
-    private final Color emission;
+    private final Vector3 color;
+    private final Vector3 emission;
 
-    public Sphere(Vector3 center, float radius, Color color, Color emission) {
+    public Sphere(Vector3 center, float radius, Vector3 color, Vector3 emission) {
         this.center = center;
         this.radius = radius;
         this.color = color;
@@ -25,11 +23,11 @@ public class Sphere {
         return radius;
     }
 
-    public Color getColor() {
+    public Vector3 getColor() {
         return color;
     }
 
-    public Color getEmission() {
+    public Vector3 getEmission() {
         return emission;
     }
 }

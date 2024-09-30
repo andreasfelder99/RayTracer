@@ -22,21 +22,21 @@ public class simpleRayTracer extends JPanel {
 
     private void render(Vector3 eye, Vector3 lookAt, float FOV) {
         scene = new Scene(new Sphere[]{
-                new Sphere(new Vector3(-1001, 0, 0), 1000, Color.RED, Color.BLACK),
-                new Sphere(new Vector3(1001, 0, 0), 1000, Color.BLUE, Color.BLACK),
-                new Sphere(new Vector3(0, 0, 1001), 1000, Color.GRAY, Color.BLACK),
-                new Sphere(new Vector3(0, -1001, 0), 1000, Color.GRAY, Color.BLACK),
-                new Sphere(new Vector3(0, 1001, 0), 1000, Color.WHITE, Color.WHITE),
-                new Sphere(new Vector3(-0.6, -0.7, 0.6), 0.3F, Color.YELLOW, Color.black),
-                new Sphere(new Vector3(0.3, -0.4, 0.3), 0.6F, Color.CYAN, Color.black)
+                new Sphere(new Vector3(-1001, 0, 0), 1000, SphereColor.RED, SphereColor.BLACK),
+                new Sphere(new Vector3(1001, 0, 0), 1000, SphereColor.BLUE, SphereColor.BLACK),
+                new Sphere(new Vector3(0, 0, 1001), 1000, SphereColor.GRAY, SphereColor.BLACK),
+                new Sphere(new Vector3(0, -1001, 0), 1000, SphereColor.GRAY, SphereColor.BLACK),
+                new Sphere(new Vector3(0, 1001, 0), 1000, SphereColor.WHITE, SphereColor.WHITE),
+                new Sphere(new Vector3(-0.6, -0.7, 0.6), 0.3F, SphereColor.YELLOW, SphereColor.BLACK),
+                new Sphere(new Vector3(0.3, -0.4, 0.3), 0.6F, SphereColor.CYAN, SphereColor.BLACK)
         });
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 Ray ray = createEyeRay(eye, lookAt, FOV, new Vector2(x, y));
                 Hitpoint hitPoint = findClosestHitpoint(scene, ray);
-                Color color = computeColor(scene, hitPoint);
-                image.setRGB(x, y, color.getRGB());
+                Vector3 color = computeColor(scene, hitPoint);
+                image.setRGB(x, y, SphereColor.tosRGB(color));
             }
         }
     }
@@ -89,8 +89,12 @@ public class simpleRayTracer extends JPanel {
         return new Hitpoint(hitPosition, closestSphere);
     }
 
-    private Color computeColor(Scene scene, Hitpoint hitPoint) {
-        if (hitPoint == null) return Color.BLACK;
+    private Vector3 computeColor(Scene scene, Hitpoint hitPoint) {
+        if (hitPoint == null) return SphereColor.BLACK;
+
+
+
+
         return hitPoint.getSphere().getColor();
     }
 
@@ -103,8 +107,8 @@ public class simpleRayTracer extends JPanel {
     public static void main(String[] args) {
         JFrame frame = new JFrame("Simple Ray Tracer");
 
-        //simpleRayTracer panel = new simpleRayTracer(new Vector3(0, 0, -4), new Vector3(0, 0, 6), Math.toRadians(36));
-        simpleRayTracer panel = new simpleRayTracer(new Vector3(-0.9, -0.5, 0.9), new Vector3(0, 0, 0), (float) Math.toRadians(110));
+        simpleRayTracer panel = new simpleRayTracer(new Vector3(0, 0, -4), new Vector3(0, 0, 6), (float) Math.toRadians(36));
+        //simpleRayTracer panel = new simpleRayTracer(new Vector3(-0.9, -0.5, 0.9), new Vector3(0, 0, 0), (float) Math.toRadians(110));
 
 
         frame.add(panel);
