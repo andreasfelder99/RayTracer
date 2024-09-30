@@ -1,10 +1,10 @@
-package ch.andreasfelder.week2;
+package ch.andreasfelder.rayTracer;
 
 import ch.andreasfelder.vector.Vector2;
 import ch.andreasfelder.vector.Vector3;
-import ch.andreasfelder.week2.brdf.BrdfNormal;
-import ch.andreasfelder.week2.brdf.BrdfReflective;
-import ch.andreasfelder.week2.brdf.IBrdf;
+import ch.andreasfelder.rayTracer.brdf.BrdfNormal;
+import ch.andreasfelder.rayTracer.brdf.BrdfReflective;
+import ch.andreasfelder.rayTracer.brdf.IBrdf;
 
 import javax.swing.*;
 import java.awt.*;
@@ -18,6 +18,8 @@ public class simpleRayTracer extends JPanel {
 
     private Scene scene;
     private final float epsilon = 1e-4f;
+    private final float p = 0.2f;
+    private final float e_correction = (float) ((2 * Math.PI) / (1 - p));
 
     private final int interations = 500;
 
@@ -109,7 +111,7 @@ public class simpleRayTracer extends JPanel {
         if (hitPoint == null) return SphereColor.BLACK;
 
         Vector3 emission = hitPoint.getSphere().getEmission();
-        if (random.nextFloat() < 0.2f)
+        if (random.nextFloat() < p)
             return emission;
 
         Vector3 n = hitPoint.getNormal();
@@ -119,7 +121,7 @@ public class simpleRayTracer extends JPanel {
 
         Vector3 color = hitPoint.getSphere().getColor();
 
-        float factor = Vector3.dot(omega_r_hat, n) * 7.8539f;
+        float factor = Vector3.dot(omega_r_hat, n) * e_correction;
         Vector3 adjustColor = brdf.calculate(color, Vector3.normalize(ray.direction()), n, omega_r);
 
         Vector3 computedColor = computeColor(scene, new Ray(hitPoint.getPosition(), omega_r), random);

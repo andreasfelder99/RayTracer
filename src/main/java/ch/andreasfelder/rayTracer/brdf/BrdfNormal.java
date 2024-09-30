@@ -1,4 +1,4 @@
-package ch.andreasfelder.week2.brdf;
+package ch.andreasfelder.rayTracer.brdf;
 
 import ch.andreasfelder.vector.Vector3;
 

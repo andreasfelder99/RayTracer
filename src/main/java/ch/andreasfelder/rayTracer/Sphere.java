@@ -1,7 +1,7 @@
-package ch.andreasfelder.week2;
+package ch.andreasfelder.rayTracer;
 
 import ch.andreasfelder.vector.Vector3;
-import ch.andreasfelder.week2.brdf.IBrdf;
+import ch.andreasfelder.rayTracer.brdf.IBrdf;
 
 public class Sphere {
     private final Vector3 center;

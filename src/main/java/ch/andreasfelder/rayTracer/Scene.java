@@ -1,4 +1,4 @@
-package ch.andreasfelder.week2;
+package ch.andreasfelder.rayTracer;
 
 public class Scene {
     private final Sphere[] spheres;
