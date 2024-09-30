@@ -2,10 +2,14 @@ package ch.andreasfelder.week2;
 
 import ch.andreasfelder.vector.Vector2;
 import ch.andreasfelder.vector.Vector3;
+import ch.andreasfelder.week2.brdf.BrdfNormal;
+import ch.andreasfelder.week2.brdf.BrdfReflective;
+import ch.andreasfelder.week2.brdf.IBrdf;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.util.Random;
 
 public class simpleRayTracer extends JPanel {
     private int width = 600;
@@ -15,27 +19,38 @@ public class simpleRayTracer extends JPanel {
     private Scene scene;
     private final float epsilon = 1e-4f;
 
+    private final int interations = 500;
+
     public simpleRayTracer(Vector3 eye, Vector3 lookAt, float FOV) {
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         render(eye, lookAt, FOV);
     }
 
     private void render(Vector3 eye, Vector3 lookAt, float FOV) {
+        final IBrdf brdfNormal = new BrdfNormal();
+        final IBrdf brdfReflect = new BrdfReflective(SphereColor.WHITE, 2);
         scene = new Scene(new Sphere[]{
-                new Sphere(new Vector3(-1001, 0, 0), 1000, SphereColor.RED, SphereColor.BLACK),
-                new Sphere(new Vector3(1001, 0, 0), 1000, SphereColor.BLUE, SphereColor.BLACK),
-                new Sphere(new Vector3(0, 0, 1001), 1000, SphereColor.GRAY, SphereColor.BLACK),
-                new Sphere(new Vector3(0, -1001, 0), 1000, SphereColor.GRAY, SphereColor.BLACK),
-                new Sphere(new Vector3(0, 1001, 0), 1000, SphereColor.WHITE, SphereColor.WHITE),
-                new Sphere(new Vector3(-0.6, -0.7, 0.6), 0.3F, SphereColor.YELLOW, SphereColor.BLACK),
-                new Sphere(new Vector3(0.3, -0.4, 0.3), 0.6F, SphereColor.CYAN, SphereColor.BLACK)
+                new Sphere(new Vector3(-1001, 0, 0), 1000, SphereColor.RED, SphereColor.BLACK, brdfNormal),
+                new Sphere(new Vector3(1001, 0, 0), 1000, SphereColor.BLUE, SphereColor.BLACK, brdfNormal),
+                new Sphere(new Vector3(0, 0, 1001), 1000, SphereColor.GRAY, SphereColor.BLACK, brdfNormal),
+                new Sphere(new Vector3(0, -1001, 0), 1000, SphereColor.GRAY, SphereColor.BLACK, brdfNormal),
+                new Sphere(new Vector3(0, 1001, 0), 1000, SphereColor.WHITE, SphereColor.WHITE, brdfNormal),
+                new Sphere(new Vector3(-0.6, -0.7, 0.6), 0.3F, SphereColor.YELLOW, SphereColor.BLACK, brdfNormal),
+                new Sphere(new Vector3(0.3, -0.4, 0.3), 0.6F, SphereColor.CYAN, SphereColor.BLACK, brdfReflect)
         });
+
+        Random random = new Random();
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 Ray ray = createEyeRay(eye, lookAt, FOV, new Vector2(x, y));
-                Hitpoint hitPoint = findClosestHitpoint(scene, ray);
-                Vector3 color = computeColor(scene, hitPoint);
+
+                Vector3 color = new Vector3(0, 0, 0);
+                for (int i = 0; i < interations; i++) {
+                    color = color.add(computeColor(scene, ray, random));
+                }
+                color = color.multiply(1.0f / interations);
+                color = SphereColor.gammaCorrectToOutput(color);
                 image.setRGB(x, y, SphereColor.tosRGB(color));
             }
         }
@@ -89,13 +104,46 @@ public class simpleRayTracer extends JPanel {
         return new Hitpoint(hitPosition, closestSphere);
     }
 
-    private Vector3 computeColor(Scene scene, Hitpoint hitPoint) {
+    private Vector3 computeColor(Scene scene, Ray ray, Random random) {
+        Hitpoint hitPoint = findClosestHitpoint(scene, ray);
         if (hitPoint == null) return SphereColor.BLACK;
 
+        Vector3 emission = hitPoint.getSphere().getEmission();
+        if (random.nextFloat() < 0.2f)
+            return emission;
 
+        Vector3 n = hitPoint.getNormal();
+        Vector3 omega_r = randomVector(n, random);
+        Vector3 omega_r_hat = Vector3.normalize(omega_r);
+        IBrdf brdf = hitPoint.getSphere().getBRDF();
 
+        Vector3 color = hitPoint.getSphere().getColor();
 
-        return hitPoint.getSphere().getColor();
+        float factor = Vector3.dot(omega_r_hat, n) * 7.8539f;
+        Vector3 adjustColor = brdf.calculate(color, Vector3.normalize(ray.direction()), n, omega_r);
+
+        Vector3 computedColor = computeColor(scene, new Ray(hitPoint.getPosition(), omega_r), random);
+        Vector3 adjustment = adjustColor.multiply(factor).multiply(computedColor);
+
+        return emission.add(adjustment);
+    }
+
+    public Vector3 randomVector(Vector3 n, Random random) {
+        while (true) {
+            Vector3 r = new Vector3(
+                    random.nextFloat() * 2 - 1,
+                    random.nextFloat() * 2 - 1,
+                    random.nextFloat() * 2 - 1);
+
+            if (r.length() > 1)
+                continue;
+
+            r = Vector3.normalize(r);
+
+            if (Vector3.dot(r, n) >= 0)
+                return r;
+            return r.multiply(-1);
+        }
     }
 
     @Override

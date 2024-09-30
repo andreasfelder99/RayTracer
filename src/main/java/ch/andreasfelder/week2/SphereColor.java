@@ -10,11 +10,14 @@ public class SphereColor {
     public static final Vector3 GREEN = new Vector3(0.0, 0.8, 0.0);
     public static final Vector3 GRAY = new Vector3(0.35, 0.35, 0.35);
     public static final Vector3 YELLOW = new Vector3(0.8, 0.8, 0.0);
-    public static final Vector3 CYAN = new Vector3(0.6, 0.8, 0.8);
+    public static final Vector3 CYAN = new Vector3(0.0, 0.8, 0.8);
 
     public static Vector3 createColourSRGB(double r, double g, double b) {
         Vector3 c = new Vector3(r / 255, g / 255, b / 255);
         return c.pow(2.2F);
+    }
+    public static Vector3 gammaCorrectToOutput(Vector3 value) {
+        return value.pow(1 / 2.2F);
     }
 
     public static int tosRGB(Vector3 color) {
