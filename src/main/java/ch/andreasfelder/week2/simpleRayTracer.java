@@ -15,12 +15,12 @@ public class simpleRayTracer extends JPanel {
     private Scene scene;
     private final float epsilon = 1e-4f;
 
-    public simpleRayTracer(Vector3 eye, Vector3 lookAt, double FOV) {
+    public simpleRayTracer(Vector3 eye, Vector3 lookAt, float FOV) {
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         render(eye, lookAt, FOV);
     }
 
-    private void render(Vector3 eye, Vector3 lookAt, double FOV) {
+    private void render(Vector3 eye, Vector3 lookAt, float FOV) {
         scene = new Scene(new Sphere[]{
                 new Sphere(new Vector3(-1001, 0, 0), 1000, Color.RED, Color.BLACK),
                 new Sphere(new Vector3(1001, 0, 0), 1000, Color.BLUE, Color.BLACK),
@@ -41,15 +41,15 @@ public class simpleRayTracer extends JPanel {
         }
     }
 
-    private Ray createEyeRay(Vector3 eye, Vector3 lookAt, double fov, Vector2 pixel) {
+    private Ray createEyeRay(Vector3 eye, Vector3 lookAt, float fov, Vector2 pixel) {
         Vector3 f = lookAt.subtract(eye);
         f = Vector3.normalize(f);
         Vector3 r = Vector3.cross(new Vector3(0, 1, 0), f);
         r = Vector3.normalize(r);
         Vector3 u = Vector3.cross(f, r);
 
-        double px = (2 * (pixel.x() + 0.5f) / width - 1) *  Math.tan(fov / 2);
-        double py = (1 - 2 * (pixel.y() + 0.5f) / height) *  Math.tan(fov / 2);
+        float px = (float) ((2 * (pixel.x() + 0.5f) / width - 1) *  Math.tan(fov / 2));
+        float py = (float) ((1 - 2 * (pixel.y() + 0.5f) / height) *  Math.tan(fov / 2));
 
         Vector3 d = f.add(r.multiply((float) px)).add(u.multiply((float) py));
         return new Ray(eye, Vector3.normalize(d));
@@ -102,7 +102,11 @@ public class simpleRayTracer extends JPanel {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Simple Ray Tracer");
-        simpleRayTracer panel = new simpleRayTracer(new Vector3(0, 0, -4), new Vector3(0, 0, 6), Math.toRadians(36));
+
+        //simpleRayTracer panel = new simpleRayTracer(new Vector3(0, 0, -4), new Vector3(0, 0, 6), Math.toRadians(36));
+        simpleRayTracer panel = new simpleRayTracer(new Vector3(-0.9, -0.5, 0.9), new Vector3(0, 0, 0), (float) Math.toRadians(110));
+
+
         frame.add(panel);
         frame.setSize(panel.width, panel.height);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
