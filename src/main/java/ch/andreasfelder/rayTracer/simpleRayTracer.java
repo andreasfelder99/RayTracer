@@ -1,5 +1,6 @@
 package ch.andreasfelder.rayTracer;
 
+import ch.andreasfelder.rayTracer.patterns.Patterns;
 import ch.andreasfelder.vector.Vector2;
 import ch.andreasfelder.vector.Vector3;
 import ch.andreasfelder.rayTracer.brdf.BrdfNormal;
@@ -10,6 +11,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.Random;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveTask;
 
 public class simpleRayTracer extends JPanel {
     private int width = 600;
@@ -18,42 +21,78 @@ public class simpleRayTracer extends JPanel {
 
     private Scene scene;
     private final float epsilon = 1e-4f;
-    private final float p = 0.2f;
+    private final float p = 0.1f;
     private final float e_correction = (float) ((2 * Math.PI) / (1 - p));
 
-    private final int interations = 500;
+    private final int iterations = 200;
 
     public simpleRayTracer(Vector3 eye, Vector3 lookAt, float FOV) {
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        render(eye, lookAt, FOV);
-    }
-
-    private void render(Vector3 eye, Vector3 lookAt, float FOV) {
         final IBrdf brdfNormal = new BrdfNormal();
-        final IBrdf brdfReflect = new BrdfReflective(SphereColor.WHITE, 2);
+        final IBrdf brdfReflect = new BrdfReflective(SphereColor.WHITE, 5);
         scene = new Scene(new Sphere[]{
                 new Sphere(new Vector3(-1001, 0, 0), 1000, SphereColor.RED, SphereColor.BLACK, brdfNormal),
                 new Sphere(new Vector3(1001, 0, 0), 1000, SphereColor.BLUE, SphereColor.BLACK, brdfNormal),
                 new Sphere(new Vector3(0, 0, 1001), 1000, SphereColor.GRAY, SphereColor.BLACK, brdfNormal),
                 new Sphere(new Vector3(0, -1001, 0), 1000, SphereColor.GRAY, SphereColor.BLACK, brdfNormal),
                 new Sphere(new Vector3(0, 1001, 0), 1000, SphereColor.WHITE, SphereColor.WHITE, brdfNormal),
-                new Sphere(new Vector3(-0.6, -0.7, 0.6), 0.3F, SphereColor.YELLOW, SphereColor.BLACK, brdfNormal),
+                new Sphere(new Vector3(-0.6, -0.7, -0.6), 0.3F, SphereColor.YELLOW, SphereColor.BLACK, brdfReflect),
                 new Sphere(new Vector3(0.3, -0.4, 0.3), 0.6F, SphereColor.CYAN, SphereColor.BLACK, brdfReflect)
         });
+        render(eye, lookAt, FOV);
+    }
 
-        Random random = new Random();
+    private void render(Vector3 eye, Vector3 lookAt, float FOV) {
+        ForkJoinPool pool = new ForkJoinPool();
+        pool.invoke(new RenderTask(eye, lookAt, FOV, 0, width, 0, height));
+    }
 
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                Ray ray = createEyeRay(eye, lookAt, FOV, new Vector2(x, y));
+    private class RenderTask extends RecursiveTask<Void> {
+        private static final int THRESHOLD = 50;
+        private Vector3 eye, lookAt;
+        private float FOV;
+        private int startX, endX, startY, endY;
 
-                Vector3 color = new Vector3(0, 0, 0);
-                for (int i = 0; i < interations; i++) {
-                    color = color.add(computeColor(scene, ray, random));
+        public RenderTask(Vector3 eye, Vector3 lookAt, float FOV, int startX, int endX, int startY, int endY) {
+            this.eye = eye;
+            this.lookAt = lookAt;
+            this.FOV = FOV;
+            this.startX = startX;
+            this.endX = endX;
+            this.startY = startY;
+            this.endY = endY;
+        }
+
+        @Override
+        protected Void compute() {
+            if ((endX - startX) * (endY - startY) <= THRESHOLD) {
+                renderSection();
+            } else {
+                int midX = (startX + endX) / 2;
+                int midY = (startY + endY) / 2;
+                invokeAll(
+                        new RenderTask(eye, lookAt, FOV, startX, midX, startY, midY),
+                        new RenderTask(eye, lookAt, FOV, midX, endX, startY, midY),
+                        new RenderTask(eye, lookAt, FOV, startX, midX, midY, endY),
+                        new RenderTask(eye, lookAt, FOV, midX, endX, midY, endY)
+                );
+            }
+            return null;
+        }
+
+        private void renderSection() {
+            Random random = new Random();
+            for (int x = startX; x < endX; x++) {
+                for (int y = startY; y < endY; y++) {
+                    Ray ray = createEyeRay(eye, lookAt, FOV, new Vector2(x, y));
+                    Vector3 color = new Vector3(0, 0, 0);
+                    for (int i = 0; i < iterations; i++) {
+                        color = color.add(computeColor(scene, ray, random));
+                    }
+                    color = color.multiply(1.0f / iterations);
+                    color = SphereColor.gammaCorrectToOutput(color);
+                    image.setRGB(x, y, SphereColor.tosRGB(color));
                 }
-                color = color.multiply(1.0f / interations);
-                color = SphereColor.gammaCorrectToOutput(color);
-                image.setRGB(x, y, SphereColor.tosRGB(color));
             }
         }
     }
@@ -68,7 +107,7 @@ public class simpleRayTracer extends JPanel {
         float px = (float) ((2 * (pixel.x() + 0.5f) / width - 1) *  Math.tan(fov / 2));
         float py = (float) ((1 - 2 * (pixel.y() + 0.5f) / height) *  Math.tan(fov / 2));
 
-        Vector3 d = f.add(r.multiply((float) px)).add(u.multiply((float) py));
+        Vector3 d = f.add(r.multiply(px)).add(u.multiply(py));
         return new Ray(eye, Vector3.normalize(d));
     }
 
@@ -156,13 +195,16 @@ public class simpleRayTracer extends JPanel {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Simple Ray Tracer");
-
         simpleRayTracer panel = new simpleRayTracer(new Vector3(0, 0, -4), new Vector3(0, 0, 6), (float) Math.toRadians(36));
         //simpleRayTracer panel = new simpleRayTracer(new Vector3(-0.9, -0.5, 0.9), new Vector3(0, 0, 0), (float) Math.toRadians(110));
 
+        //Textures / Patterns
+        //Patterns panel = new Patterns();
 
         frame.add(panel);
         frame.setSize(panel.width, panel.height);
+        //Patterns
+        //frame.setSize(600,600);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
     }
