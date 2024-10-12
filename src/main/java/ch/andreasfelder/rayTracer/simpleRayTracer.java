@@ -1,6 +1,8 @@
 package ch.andreasfelder.rayTracer;
 
-import ch.andreasfelder.rayTracer.patterns.Patterns;
+import ch.andreasfelder.rayTracer.texture.BitMapTexture;
+import ch.andreasfelder.rayTracer.texture.Texture;
+import ch.andreasfelder.rayTracer.texture.UniColorTexture;
 import ch.andreasfelder.vector.Vector2;
 import ch.andreasfelder.vector.Vector3;
 import ch.andreasfelder.rayTracer.brdf.BrdfNormal;
@@ -20,24 +22,24 @@ public class simpleRayTracer extends JPanel {
     private BufferedImage image;
 
     private Scene scene;
-    private final float epsilon = 1e-4f;
+    private final float epsilon = 1e-3f;
     private final float p = 0.1f;
     private final float e_correction = (float) ((2 * Math.PI) / (1 - p));
 
-    private final int iterations = 200;
+    private final int iterations = 7000;
 
     public simpleRayTracer(Vector3 eye, Vector3 lookAt, float FOV) {
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         final IBrdf brdfNormal = new BrdfNormal();
-        final IBrdf brdfReflect = new BrdfReflective(SphereColor.WHITE, 5);
+        final IBrdf brdfReflect = new BrdfReflective(SphereColor.WHITE, 5f);
         scene = new Scene(new Sphere[]{
-                new Sphere(new Vector3(-1001, 0, 0), 1000, SphereColor.RED, SphereColor.BLACK, brdfNormal),
-                new Sphere(new Vector3(1001, 0, 0), 1000, SphereColor.BLUE, SphereColor.BLACK, brdfNormal),
-                new Sphere(new Vector3(0, 0, 1001), 1000, SphereColor.GRAY, SphereColor.BLACK, brdfNormal),
-                new Sphere(new Vector3(0, -1001, 0), 1000, SphereColor.GRAY, SphereColor.BLACK, brdfNormal),
-                new Sphere(new Vector3(0, 1001, 0), 1000, SphereColor.WHITE, SphereColor.WHITE, brdfNormal),
-                new Sphere(new Vector3(-0.6, -0.7, -0.6), 0.3F, SphereColor.YELLOW, SphereColor.BLACK, brdfReflect),
-                new Sphere(new Vector3(0.3, -0.4, 0.3), 0.6F, SphereColor.CYAN, SphereColor.BLACK, brdfReflect)
+                new Sphere(new Vector3(-1001, 0, 0), 1000, SphereColor.BLACK, brdfNormal, new UniColorTexture(SphereColor.RED)),
+                new Sphere(new Vector3(1001, 0, 0), 1000, SphereColor.BLACK, brdfNormal, new UniColorTexture(SphereColor.BLUE)),
+                new Sphere(new Vector3(0, 0, 1001), 1000, SphereColor.BLACK, brdfNormal, new UniColorTexture(SphereColor.GRAY)),
+                new Sphere(new Vector3(0, -1001, 0), 1000, SphereColor.BLACK, brdfNormal, new UniColorTexture(SphereColor.GRAY)),
+                new Sphere(new Vector3(0, 1001, 0), 1000, SphereColor.WHITE, brdfNormal, new UniColorTexture(SphereColor.WHITE)),
+                new Sphere(new Vector3(-0.6, -0.7, -0.6), 0.3F, SphereColor.BLACK, brdfReflect, new BitMapTexture("/marble.jpg")),
+                new Sphere(new Vector3(0.3, -0.4, 0.3), 0.6F, SphereColor.BLACK, brdfReflect, new BitMapTexture("/bricks2.jpg"))
         });
         render(eye, lookAt, FOV);
     }
@@ -90,7 +92,7 @@ public class simpleRayTracer extends JPanel {
                         color = color.add(computeColor(scene, ray, random));
                     }
                     color = color.multiply(1.0f / iterations);
-                    color = SphereColor.gammaCorrectToOutput(color);
+                    color = SphereColor.gammaCorrectOutput(color);
                     image.setRGB(x, y, SphereColor.tosRGB(color));
                 }
             }
@@ -158,7 +160,9 @@ public class simpleRayTracer extends JPanel {
         Vector3 omega_r_hat = Vector3.normalize(omega_r);
         IBrdf brdf = hitPoint.getSphere().getBRDF();
 
-        Vector3 color = hitPoint.getSphere().getColor();
+        Texture texture = hitPoint.getSphere().getTexture();
+        Vector3 localPosition = Vector3.normalize(hitPoint.getPosition().subtract(hitPoint.getSphere().getCenter()));
+        Vector3 color = texture.getTextureColor(localPosition);
 
         float factor = Vector3.dot(omega_r_hat, n) * e_correction;
         Vector3 adjustColor = brdf.calculate(color, Vector3.normalize(ray.direction()), n, omega_r);

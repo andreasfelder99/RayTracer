@@ -31,7 +31,7 @@ public class Patterns extends JPanel {
                 double blue = Math.sin(spiralEffect);
 
                 Vector3 colorVector = new Vector3(red, green, blue);
-                Vector3 correctedColor = gammaCorrectToOutput(colorVector);
+                Vector3 correctedColor = gammaCorrectOutput(colorVector);
                 int intColor = tosRGB(correctedColor);
 
                 pixels[x + y * width] = intColor;
