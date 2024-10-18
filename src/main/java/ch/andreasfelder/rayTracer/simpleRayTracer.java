@@ -22,13 +22,13 @@ public class simpleRayTracer extends JPanel {
     private final float p = 0.1f;
     private final float e_correction = (float) ((2 * Math.PI) / (1 - p));
 
-    private final int iterations = 20;
+    private final int iterations = 30;
 
-    private final float antiAliasingSetting = 0.2f;
+    private final float antiAliasingSetting = 0.25f;
 
     public simpleRayTracer(Vector3 eye, Vector3 lookAt, float FOV) {
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        scene = Scenes.getGalaxyScene();
+        scene = Scenes.getCornellScene();
         render(eye, lookAt, FOV);
     }
 

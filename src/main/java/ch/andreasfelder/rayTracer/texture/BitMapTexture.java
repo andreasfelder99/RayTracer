@@ -23,6 +23,7 @@ public class BitMapTexture implements Texture{
         textureImage = image;
     }
 
+    @Override
     public Vector3 getTextureColor(Vector3 position) {
         Vector2 projectedPosition = projection.project(position);
 

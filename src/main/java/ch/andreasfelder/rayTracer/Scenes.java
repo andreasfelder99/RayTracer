@@ -43,7 +43,7 @@ public class Scenes {
             new Sphere(new Vector3(0, 1001, 0), 1000, SphereColor.WHITE, brdfNormal,
                 new UniColorTexture(SphereColor.WHITE)),
             new Sphere(new Vector3(-0.6, -0.7, -0.6), 0.3F, SphereColor.BLACK, brdfReflect,
-                new BitMapTexture("/marble.jpg")),
+                new BitMapTexture("/marsSurface.jpg")),
             new Sphere(new Vector3(0.3, -0.4, 0.3), 0.6F, SphereColor.BLACK, brdfReflect,
                 new BitMapTexture("/bricks2.jpg"))
         });
@@ -61,19 +61,18 @@ public class Scenes {
             new Sphere(new Vector3(0, -1001, 0), 1000, SphereColor.BLACK, brdfNormal,
                 new UniColorTexture(SphereColor.GRAY)), // Floor
             new Sphere(new Vector3(0, 1001, 0), 1000, SphereColor.WHITE, brdfNormal,
-                new UniColorTexture(SphereColor.WHITE)), // Ceiling
-
+                new UniColorTexture(SphereColor.GRAY)), // Ceiling
 
             // Galaxy-like small spheres
             new Sphere(new Vector3(-0.5, -0.5, -0.5), 0.1F, SphereColor.BLACK, brdfReflect,
                 new BitMapTexture("/venusSurface.jpg")), // Star
             new Sphere(new Vector3(0.5, -0.4, 0.6), 0.15F, SphereColor.BLACK, brdfReflect,
                 new UniColorTexture(SphereColor.BLUE)), // Star
-            new Sphere(new Vector3(-0.3, -0.3, 0.3), 0.2F, SphereColor.BLACK, brdfReflect,
+            new Sphere(new Vector3(-0.3, -0.3, 0.3), 0.2F, SphereColor.BLACK, brdfNormal,
                 new BitMapTexture("/sun.jpg")), // Star
             new Sphere(new Vector3(0.2, -0.2, -0.3), 0.25F, SphereColor.BLACK, brdfReflect,
                 new BitMapTexture("/marsSurface.jpg")), // Star
-            new Sphere(new Vector3(-0.1, -0.1, 0.1), 0.05F, SphereColor.BLACK, brdfReflect,
+            new Sphere(new Vector3(-0.1, -0.1, 0.1), 0.05F, SphereColor.BLACK, brdfNormal,
                 new UniColorTexture(SphereColor.MAGENTA)) // Small central star
         });
     }
