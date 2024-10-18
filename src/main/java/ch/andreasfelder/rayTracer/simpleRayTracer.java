@@ -22,9 +22,9 @@ public class simpleRayTracer extends JPanel {
     private final float p = 0.1f;
     private final float e_correction = (float) ((2 * Math.PI) / (1 - p));
 
-    private final int iterations = 10;
+    private final int iterations = 20;
 
-    private final float antiAliasingSetting = 0.25f;
+    private final float antiAliasingSetting = 0.2f;
 
     public simpleRayTracer(Vector3 eye, Vector3 lookAt, float FOV) {
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
@@ -75,14 +75,12 @@ public class simpleRayTracer extends JPanel {
             for (int x = startX; x < endX; x++) {
                 for (int y = startY; y < endY; y++) {
 
-                    float gaussX = (float) (random.nextGaussian(0, antiAliasingSetting) * (1.0 / 600));
-                    float gaussY = (float) (random.nextGaussian(0, antiAliasingSetting) * (1.0 / 600));
-
-                    Ray ray = createEyeRay(eye, lookAt, FOV, new Vector2(x + gaussX, y + gaussY));
-
                     Vector3 color = new Vector3(0, 0, 0);
 
                     for (int i = 0; i < iterations; i++) {
+                        float gaussX = (float) (random.nextGaussian(0, antiAliasingSetting));
+                        float gaussY = (float) (random.nextGaussian(0, antiAliasingSetting));
+                        Ray ray = createEyeRay(eye, lookAt, FOV, new Vector2(x + gaussX, y + gaussY));
                         color = color.add(computeColor(scene, ray, random));
                     }
 
@@ -194,7 +192,7 @@ public class simpleRayTracer extends JPanel {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Simple Ray Tracer");
-        simpleRayTracer panel = new simpleRayTracer(new Vector3(0, 0, -4), new Vector3(0, 0, 6), (float) Math.toRadians(36));
+        simpleRayTracer panel = new simpleRayTracer(new Vector3(0, 0, -3), new Vector3(0, 0, 6), (float) Math.toRadians(36));
         //simpleRayTracer panel = new simpleRayTracer(new Vector3(-0.9, -0.5, 0.9), new Vector3(0, 0, 0), (float) Math.toRadians(110));
 
         //Textures / Patterns

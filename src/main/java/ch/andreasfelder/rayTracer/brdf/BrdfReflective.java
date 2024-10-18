@@ -14,8 +14,9 @@ public class BrdfReflective implements IBrdf{
     public Vector3 calculate(Vector3 diffuseColour, Vector3 d, Vector3 n, Vector3 omega_r) {
         Vector3 d_r = Vector3.normalize(Vector3.reflect(d, n));
 
-        if (Vector3.dot(omega_r, d_r) > 1 - 0.01)
+        if (Vector3.dot(omega_r, d_r) > 0.99) {
             return diffuseColour.multiply(one_over_pi).add(specularColour.multiply(multiplier));
+        }
         return diffuseColour.multiply(one_over_pi);
     }
 }
