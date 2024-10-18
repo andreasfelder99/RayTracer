@@ -1,12 +1,8 @@
 package ch.andreasfelder.rayTracer;
 
-import ch.andreasfelder.rayTracer.texture.BitMapTexture;
 import ch.andreasfelder.rayTracer.texture.Texture;
-import ch.andreasfelder.rayTracer.texture.UniColorTexture;
 import ch.andreasfelder.vector.Vector2;
 import ch.andreasfelder.vector.Vector3;
-import ch.andreasfelder.rayTracer.brdf.BrdfNormal;
-import ch.andreasfelder.rayTracer.brdf.BrdfReflective;
 import ch.andreasfelder.rayTracer.brdf.IBrdf;
 
 import javax.swing.*;
@@ -26,21 +22,13 @@ public class simpleRayTracer extends JPanel {
     private final float p = 0.1f;
     private final float e_correction = (float) ((2 * Math.PI) / (1 - p));
 
-    private final int iterations = 7000;
+    private final int iterations = 10;
+
+    private final float antiAliasingSetting = 0.25f;
 
     public simpleRayTracer(Vector3 eye, Vector3 lookAt, float FOV) {
         image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-        final IBrdf brdfNormal = new BrdfNormal();
-        final IBrdf brdfReflect = new BrdfReflective(SphereColor.WHITE, 5f);
-        scene = new Scene(new Sphere[]{
-                new Sphere(new Vector3(-1001, 0, 0), 1000, SphereColor.BLACK, brdfNormal, new UniColorTexture(SphereColor.RED)),
-                new Sphere(new Vector3(1001, 0, 0), 1000, SphereColor.BLACK, brdfNormal, new UniColorTexture(SphereColor.BLUE)),
-                new Sphere(new Vector3(0, 0, 1001), 1000, SphereColor.BLACK, brdfNormal, new UniColorTexture(SphereColor.GRAY)),
-                new Sphere(new Vector3(0, -1001, 0), 1000, SphereColor.BLACK, brdfNormal, new UniColorTexture(SphereColor.GRAY)),
-                new Sphere(new Vector3(0, 1001, 0), 1000, SphereColor.WHITE, brdfNormal, new UniColorTexture(SphereColor.WHITE)),
-                new Sphere(new Vector3(-0.6, -0.7, -0.6), 0.3F, SphereColor.BLACK, brdfReflect, new BitMapTexture("/marble.jpg")),
-                new Sphere(new Vector3(0.3, -0.4, 0.3), 0.6F, SphereColor.BLACK, brdfReflect, new BitMapTexture("/bricks2.jpg"))
-        });
+        scene = Scenes.getGalaxyScene();
         render(eye, lookAt, FOV);
     }
 
@@ -86,11 +74,18 @@ public class simpleRayTracer extends JPanel {
             Random random = new Random();
             for (int x = startX; x < endX; x++) {
                 for (int y = startY; y < endY; y++) {
-                    Ray ray = createEyeRay(eye, lookAt, FOV, new Vector2(x, y));
+
+                    float gaussX = (float) (random.nextGaussian(0, antiAliasingSetting) * (1.0 / 600));
+                    float gaussY = (float) (random.nextGaussian(0, antiAliasingSetting) * (1.0 / 600));
+
+                    Ray ray = createEyeRay(eye, lookAt, FOV, new Vector2(x + gaussX, y + gaussY));
+
                     Vector3 color = new Vector3(0, 0, 0);
+
                     for (int i = 0; i < iterations; i++) {
                         color = color.add(computeColor(scene, ray, random));
                     }
+
                     color = color.multiply(1.0f / iterations);
                     color = SphereColor.gammaCorrectOutput(color);
                     image.setRGB(x, y, SphereColor.tosRGB(color));
